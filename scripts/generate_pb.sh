@@ -12,7 +12,7 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROTO_DIR="${REPO_ROOT}/proto"
-OUT_DIR="${REPO_ROOT}/src/chatto_bridge/_pb"
+OUT_DIR="${REPO_ROOT}/chatto_bridge/_pb"
 CHATTO_REF="${CHATTO_REF:-main}"
 BASE_URL="https://raw.githubusercontent.com/chattocorp/chatto/${CHATTO_REF}"
 

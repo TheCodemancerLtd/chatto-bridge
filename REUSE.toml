@@ -20,7 +20,7 @@ SPDX-License-Identifier = "MPL-2.0"
 # so that downstream integrations can pick their own licence for the rest).
 [[annotations]]
 path = [
-    "src/chatto_bridge/_pb/chatto/**",
+    "chatto_bridge/_pb/chatto/**",
     "proto/chatto/**",
 ]
 SPDX-FileCopyrightText = "2026 ChattoCorp GmbH"

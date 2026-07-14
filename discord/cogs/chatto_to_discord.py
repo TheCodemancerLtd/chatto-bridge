@@ -19,7 +19,7 @@ import logging
 import discord
 from discord.ext import commands
 
-from chatto_bridge.bot import ChattoBridgeBot
+from chatto_bridge.discord.bot import ChattoBridgeBot
 from chatto_bridge.events import RoomEvent
 
 log = logging.getLogger(__name__)

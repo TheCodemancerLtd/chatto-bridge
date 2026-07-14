@@ -1,4 +1,4 @@
-"""Entrypoint: `python -m chatto_bridge` or the `chatto-bridge` console script."""
+"""Entrypoint: `python -m chatto_bridge.discord` or the `chatto-bridge` script."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ import sys
 
 from dotenv import load_dotenv
 
-from chatto_bridge.bot import ChattoBridgeBot
-from chatto_bridge.config import BridgeConfig, ConfigError
+from chatto_bridge.discord.bot import ChattoBridgeBot
+from chatto_bridge.discord.config import BridgeConfig, ConfigError
 
 
 async def _run() -> None:

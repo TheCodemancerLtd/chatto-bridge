@@ -6,8 +6,9 @@ machine-readable licence boundary is in [REUSE.toml](REUSE.toml).
 
 ## Default: MPL-2.0
 
-The bridge's own code — `src/chatto_bridge/*.py` (except any `_pb/` subtree),
-`tests/`, `scripts/`, and repository documentation — is licensed under the
+The bridge's own code — `chatto_bridge/*.py`, `discord/**`, `slack/**`
+(except any `_pb/` subtree), `tests/`, `scripts/`, and repository
+documentation — is licensed under the
 **Mozilla Public License 2.0** (`MPL-2.0`). See [LICENSE](LICENSE) for the
 full text.
 
@@ -31,7 +32,7 @@ If and when this repo vendors Chatto's core-event protobuf sources
 Python bindings, those paths ship under **Apache License 2.0**:
 
 - `proto/chatto/**` — mirrors of `chattocorp/chatto`'s `.proto` sources.
-- `src/chatto_bridge/_pb/chatto/**` — the generated Python bindings derived
+- `chatto_bridge/_pb/chatto/**` — the generated Python bindings derived
   from those sources.
 
 Chatto's own [`REUSE.toml`](https://github.com/chattocorp/chatto/blob/main/REUSE.toml)

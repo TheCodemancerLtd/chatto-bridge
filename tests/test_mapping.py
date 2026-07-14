@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from chatto_bridge.mapping import BridgeMap
+from chatto_bridge.discord.mapping import BridgeMap
 
 
 def test_link_and_lookup() -> None:

@@ -13,7 +13,7 @@ import logging
 import discord
 from discord.ext import commands
 
-from chatto_bridge.bot import ChattoBridgeBot
+from chatto_bridge.discord.bot import ChattoBridgeBot
 
 log = logging.getLogger(__name__)
 

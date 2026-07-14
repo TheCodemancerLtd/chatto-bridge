@@ -8,16 +8,16 @@ import discord
 from chattolib import ChattoClient
 from discord.ext import commands
 
-from chatto_bridge.config import BridgeConfig
-from chatto_bridge.mapping import BridgeMap
+from chatto_bridge.discord.config import BridgeConfig
+from chatto_bridge.discord.mapping import BridgeMap
 
 log = logging.getLogger(__name__)
 
 COGS = (
-    "chatto_bridge.cogs.nats_listener",
-    "chatto_bridge.cogs.chatto_to_discord",
-    "chatto_bridge.cogs.discord_to_chatto",
-    "chatto_bridge.cogs.admin",
+    "chatto_bridge.discord.cogs.nats_listener",
+    "chatto_bridge.discord.cogs.chatto_to_discord",
+    "chatto_bridge.discord.cogs.discord_to_chatto",
+    "chatto_bridge.discord.cogs.admin",
 )
 
 

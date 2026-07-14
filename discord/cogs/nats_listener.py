@@ -21,7 +21,7 @@ from nats.aio.client import Client as NATSClient
 from nats.aio.msg import Msg
 from nats.aio.subscription import Subscription
 
-from chatto_bridge.bot import ChattoBridgeBot
+from chatto_bridge.discord.bot import ChattoBridgeBot
 from chatto_bridge.events import decode_event
 
 log = logging.getLogger(__name__)

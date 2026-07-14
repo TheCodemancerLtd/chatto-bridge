@@ -10,7 +10,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from chatto_bridge.bot import ChattoBridgeBot
+from chatto_bridge.discord.bot import ChattoBridgeBot
 
 
 class Admin(commands.Cog):

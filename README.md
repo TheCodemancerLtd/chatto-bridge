@@ -76,7 +76,7 @@ Required env vars:
 ```bash
 chatto-bridge
 # or
-python -m chatto_bridge
+python -m chatto_bridge.discord
 ```
 
 ## Chatto NATS subjects consumed
@@ -91,19 +91,34 @@ event tokens (`message_posted`, `message_edited`, `reaction_added`, …).
 
 ## Layout
 
-- `src/chatto_bridge/bot.py` — `commands.Bot` subclass; loads cogs.
-- `src/chatto_bridge/cogs/nats_listener.py` — subscribes to `live.evt.room.>`
-  and dispatches decoded events onto the bot's event loop.
-- `src/chatto_bridge/cogs/chatto_to_discord.py` — turns Chatto events into
-  Discord messages via webhooks (to preserve author display).
-- `src/chatto_bridge/cogs/discord_to_chatto.py` — listens to Discord
-  `on_message` and posts to Chatto via `chattolib.ChattoClient`.
-- `src/chatto_bridge/cogs/admin.py` — `/bridge` slash commands for linking
-  and unlinking rooms.
-- `src/chatto_bridge/config.py` — env → typed config.
-- `src/chatto_bridge/mapping.py` — Chatto room ↔ Discord channel mapping.
-- `src/chatto_bridge/_pb/` — generated `chatto.core.v1` protobuf bindings.
-  Regenerate with `scripts/generate_pb.sh`.
+Sources are organised by chat platform, with shared (chatto-side) code at
+the repo root. Setuptools remaps the on-disk `discord/` and `slack/`
+directories into subpackages of `chatto_bridge` so that the `discord/`
+folder does not shadow the pypi `discord.py` package at import time —
+see `[tool.setuptools.package-dir]` in `pyproject.toml`.
+
+```
+/
+├── chatto_bridge/            # shared, imported as `chatto_bridge`
+│   ├── events.py             # RoomEvent, subject parser, protobuf decoder
+│   └── _pb/                  # generated chatto.core.v1 bindings (gitignored)
+├── discord/                  # imported as `chatto_bridge.discord`
+│   ├── __main__.py           # entrypoint (also the `chatto-bridge` script)
+│   ├── bot.py                # commands.Bot subclass; loads cogs
+│   ├── config.py             # env → typed config
+│   ├── mapping.py            # room ↔ discord channel map
+│   └── cogs/
+│       ├── nats_listener.py       # subscribe live.evt.room.>, dispatch to bot
+│       ├── chatto_to_discord.py   # forward chatto events to discord webhooks
+│       ├── discord_to_chatto.py   # forward discord messages via chattolib
+│       └── admin.py               # /bridge link|unlink|list slash commands
+├── slack/                    # imported as `chatto_bridge.slack` (placeholder)
+├── proto/                    # vendored chatto.core.v1 protos (gitignored)
+├── scripts/generate_pb.sh    # fetches protos + runs protoc
+├── docs/nats.md              # subjects consumed + write-path rationale
+├── tests/
+└── pyproject.toml
+```
 
 ## License
 

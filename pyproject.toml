@@ -33,7 +33,7 @@ dependencies = [
 ]
 
 [project.scripts]
-chatto-bridge = "chatto_bridge.__main__:main"
+chatto-bridge = "chatto_bridge.discord.__main__:main"
 
 [project.optional-dependencies]
 dev = [
@@ -43,8 +43,23 @@ dev = [
     "mypy>=1.13",
 ]
 
-[tool.setuptools.packages.find]
-where = ["src"]
+# The `discord/` and `slack/` top-level source directories are remapped
+# into subpackages of `chatto_bridge` so that (a) all platform integrations
+# share a common import root, and (b) the on-disk `discord/` folder does
+# not shadow the pypi `discord.py` package at import time.
+[tool.setuptools]
+packages = [
+    "chatto_bridge",
+    "chatto_bridge.discord",
+    "chatto_bridge.discord.cogs",
+    "chatto_bridge.slack",
+]
+
+[tool.setuptools.package-dir]
+"chatto_bridge" = "chatto_bridge"
+"chatto_bridge.discord" = "discord"
+"chatto_bridge.discord.cogs" = "discord/cogs"
+"chatto_bridge.slack" = "slack"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -53,7 +68,7 @@ testpaths = ["tests"]
 [tool.ruff]
 target-version = "py311"
 line-length = 100
-extend-exclude = ["src/chatto_bridge/_pb"]
+extend-exclude = ["chatto_bridge/_pb"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP"]
@@ -63,7 +78,7 @@ python_version = "3.11"
 strict = true
 warn_return_any = true
 warn_unused_configs = true
-exclude = ["src/chatto_bridge/_pb"]
+exclude = ["chatto_bridge/_pb"]
 
 [[tool.mypy.overrides]]
 module = ["chatto_bridge._pb.*", "nats.*", "discord.*"]
