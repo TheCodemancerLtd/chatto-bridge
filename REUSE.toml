@@ -1,0 +1,27 @@
+# SPDX-FileCopyrightText: 2026 TheCodemancer
+# SPDX-License-Identifier: MPL-2.0
+
+version = 1
+
+# Default: chatto-bridge's own code is MPL-2.0.
+[[annotations]]
+path = "**"
+SPDX-FileCopyrightText = "2026 TheCodemancer"
+SPDX-License-Identifier = "MPL-2.0"
+
+# License text files themselves are the FSF's / OSI's canonical text.
+[[annotations]]
+path = ["LICENSE", "LICENSES/MPL-2.0.txt"]
+SPDX-FileCopyrightText = "Mozilla Foundation"
+SPDX-License-Identifier = "MPL-2.0"
+
+# Vendored / generated protobuf bindings mirror Chatto's Apache-2.0 upstream
+# (chattocorp/chatto's REUSE.toml annotates the .proto sources as Apache-2.0
+# so that downstream integrations can pick their own licence for the rest).
+[[annotations]]
+path = [
+    "src/chatto_bridge/_pb/chatto/**",
+    "proto/chatto/**",
+]
+SPDX-FileCopyrightText = "2026 ChattoCorp GmbH"
+SPDX-License-Identifier = "Apache-2.0"

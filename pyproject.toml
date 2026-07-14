@@ -1,0 +1,71 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chatto-bridge"
+version = "0.1.0"
+description = "Discord ↔ Chatto bridge bot (discord.py + chattolib + NATS)"
+requires-python = ">=3.11"
+license = "MPL-2.0 AND Apache-2.0"
+license-files = ["LICENSE", "LICENSES/*.txt"]
+readme = "README.md"
+authors = [
+    { name = "Felix", email = "chatto@f3l1x.it" },
+]
+keywords = ["chatto", "discord", "bridge", "bot", "nats"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Communications :: Chat",
+    "Framework :: AsyncIO",
+]
+dependencies = [
+    "discord.py>=2.4",
+    "chattolib>=0.4.10",
+    "nats-py>=2.9",
+    "protobuf>=5.28",
+    "python-dotenv>=1.0",
+]
+
+[project.scripts]
+chatto-bridge = "chatto_bridge.__main__:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.8",
+    "mypy>=1.13",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+extend-exclude = ["src/chatto_bridge/_pb"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+exclude = ["src/chatto_bridge/_pb"]
+
+[[tool.mypy.overrides]]
+module = ["chatto_bridge._pb.*", "nats.*", "discord.*"]
+follow_imports = "skip"
+ignore_missing_imports = true
