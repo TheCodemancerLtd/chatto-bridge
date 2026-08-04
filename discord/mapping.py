@@ -2,17 +2,15 @@
 
 The initial mapping is loaded from the ``BRIDGE_MAP`` env var and can be
 mutated at runtime via the ``Admin`` cog's ``/bridge link`` and ``/bridge
-unlink`` slash commands.  When a file path is provided, the map is persisted
-to JSON on every mutation and reloaded on startup, with ``BRIDGE_MAP`` taking
-precedence for overlapping keys.
+unlink`` slash commands.  When a database path is provided, the map is
+persisted to SQLite on every mutation and reloaded on startup, with
+``BRIDGE_MAP`` taking precedence for overlapping keys.
 """
 
 from __future__ import annotations
 
-import json
 import logging
 import sqlite3
-from pathlib import Path
 from threading import RLock
 
 log = logging.getLogger(__name__)
@@ -62,13 +60,19 @@ class BridgeMap:
     def __init__(
         self,
         room_to_channel: dict[str, int],
-        path: str | Path | None = None,
+        path: str | None = None,
     ) -> None:
         self._lock = RLock()
-        self._path: Path | None = Path(path) if path else None
+        self._persist: Persistence | None = None
 
-        # Start from persisted state, then overlay env-var config.
-        persisted: dict[str, int] = self._load()
+        if path is not None:
+            self._persist = Persistence(path)
+            persisted = self._persist.load_bridges()
+            if persisted:
+                log.info("loaded %d bridge map entries from %s", len(persisted), path)
+        else:
+            persisted = {}
+
         persisted.update(room_to_channel)
 
         self._room_to_channel: dict[str, int] = persisted
@@ -78,33 +82,30 @@ class BridgeMap:
 
     # -- persistence --------------------------------------------------------
 
-    def _load(self) -> dict[str, int]:
-        if self._path is None or not self._path.is_file():
-            return {}
-        try:
-            data = json.loads(self._path.read_text())
-            if not isinstance(data, dict):
-                log.warning("bridge map file %s is not an object, ignoring", self._path)
-                return {}
-            # Validate types — discard invalid entries rather than crash.
-            result: dict[str, int] = {}
-            for key, value in data.items():
-                if isinstance(key, str) and isinstance(value, int):
-                    result[key] = value
-            if result:
-                log.info("loaded %d bridge map entries from %s", len(result), self._path)
-            return result
-        except (OSError, json.JSONDecodeError) as exc:
-            log.warning("failed to load bridge map from %s: %s", self._path, exc)
-            return {}
+    def _persist_link(self, room_id: str, channel_id: int) -> None:
+        if self._persist is not None:
+            try:
+                self._persist.upsert_bridge(room_id, channel_id)
+            except Exception:
+                log.exception("failed to persist bridge link %s -> %s", room_id, channel_id)
 
-    def _save(self) -> None:
-        if self._path is None:
-            return
-        try:
-            self._path.write_text(json.dumps(self._room_to_channel, indent=2) + "\n")
-        except OSError as exc:
-            log.warning("failed to save bridge map to %s: %s", self._path, exc)
+    def _persist_delete_room(self, room_id: str) -> None:
+        if self._persist is not None:
+            try:
+                self._persist.delete_by_room(room_id)
+            except Exception:
+                log.exception("failed to persist bridge delete for room %s", room_id)
+
+    def _persist_delete_channel(self, channel_id: int) -> None:
+        if self._persist is not None:
+            try:
+                self._persist.delete_by_channel(channel_id)
+            except Exception:
+                log.exception("failed to persist bridge delete for channel %s", channel_id)
+
+    def close(self) -> None:
+        if self._persist is not None:
+            self._persist.close()
 
     # -- lookup -------------------------------------------------------------
 
@@ -128,7 +129,7 @@ class BridgeMap:
                 self._room_to_channel.pop(existing_room, None)
             self._room_to_channel[room_id] = channel_id
             self._channel_to_room[channel_id] = room_id
-        self._save()
+        self._persist_link(room_id, channel_id)
 
     def unlink_room(self, room_id: str) -> bool:
         with self._lock:
@@ -136,7 +137,7 @@ class BridgeMap:
             if channel is None:
                 return False
             self._channel_to_room.pop(channel, None)
-        self._save()
+        self._persist_delete_room(room_id)
         return True
 
     def unlink_channel(self, channel_id: int) -> bool:
@@ -145,7 +146,7 @@ class BridgeMap:
             if room is None:
                 return False
             self._room_to_channel.pop(room, None)
-        self._save()
+        self._persist_delete_channel(channel_id)
         return True
 
     # -- inspection ---------------------------------------------------------

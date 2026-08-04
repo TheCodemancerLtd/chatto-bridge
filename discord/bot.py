@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import logging
 
-import discord
-from chattolib import ChattoClient
-from discord.ext import commands
-
 from chatto_bridge.discord.config import BridgeConfig
 from chatto_bridge.discord.mapping import BridgeMap
+from chattolib import ChattoClient
+
+import discord
+from discord.ext import commands
 
 log = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ class ChattoBridgeBot(commands.Bot):
         intents.members = True
         super().__init__(command_prefix="!", intents=intents)
         self.config = config
-        self.bridge_map = BridgeMap(config.room_to_channel)
+        self.bridge_map = BridgeMap(config.room_to_channel, path="chatto-bridge.db")
         self.guild_id = config.discord_guild_id
 
     async def setup_hook(self) -> None:
@@ -56,6 +56,7 @@ class ChattoBridgeBot(commands.Bot):
         log.info("synced application commands to guild %s", self.guild_id)
 
     async def close(self) -> None:
+        self.bridge_map.close()
         try:
             await self.chatto.close()
         except Exception:  # noqa: BLE001 — cleanup path, keep going
