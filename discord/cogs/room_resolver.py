@@ -5,9 +5,6 @@ from __future__ import annotations
 import re
 from urllib.parse import urlparse
 
-# ULIDs are 26 characters of Crockford's Base32
-_ULID_RE = re.compile(r"^[0-2ACJEPHTNPZMRGV5DFKRWXSH36789]{26}$", re.IGNORECASE)
-
 _ROOM_URL_RE = re.compile(r"/room/([A-Za-z0-9]+)")
 
 
