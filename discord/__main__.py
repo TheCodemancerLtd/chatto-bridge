@@ -8,19 +8,18 @@ import sys
 
 from dotenv import load_dotenv
 
-from chatto_bridge.discord.bot import ChattoBridgeBot
-from chatto_bridge.discord.config import BridgeConfig, ConfigError
+from chatto_bridge.config import ConfigError, CoreConfig
+from chatto_bridge.engine import BridgeEngine
 
 
 async def _run() -> None:
-    config = BridgeConfig.from_env()
+    config = CoreConfig.from_env()
     logging.basicConfig(
         level=config.log_level,
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
-    bot = ChattoBridgeBot(config)
-    async with bot:
-        await bot.start(config.discord_bot_token)
+    engine = BridgeEngine(config)
+    await engine.run()
 
 
 def main() -> None:

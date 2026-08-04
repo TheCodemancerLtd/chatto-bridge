@@ -1,0 +1,1 @@
+"""Nostr plugin package."""

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "chatto-bridge"
 version = "0.1.0"
-description = "Discord ↔ Chatto bridge bot (discord.py + chattolib + NATS)"
+description = "Multi-platform Chatto bridge (Discord, Slack, Nostr plugins)"
 requires-python = ">=3.11"
 license = "MPL-2.0 AND Apache-2.0"
 license-files = ["LICENSE", "LICENSES/*.txt"]
@@ -35,6 +35,11 @@ dependencies = [
 [project.scripts]
 chatto-bridge = "chatto_bridge.discord.__main__:main"
 
+[project.entry-points."chatto_bridge.plugins"]
+discord = "chatto_bridge.discord.plugin:DiscordPlugin"
+nostr = "chatto_bridge.nostr.plugin:NostrPlugin"
+slack = "chatto_bridge.slack.plugin:SlackPlugin"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
@@ -52,6 +57,7 @@ packages = [
     "chatto_bridge",
     "chatto_bridge.discord",
     "chatto_bridge.discord.cogs",
+    "chatto_bridge.nostr",
     "chatto_bridge.slack",
 ]
 
@@ -59,6 +65,7 @@ packages = [
 "chatto_bridge" = "chatto_bridge"
 "chatto_bridge.discord" = "discord"
 "chatto_bridge.discord.cogs" = "discord/cogs"
+"chatto_bridge.nostr" = "nostr"
 "chatto_bridge.slack" = "slack"
 
 [tool.pytest.ini_options]

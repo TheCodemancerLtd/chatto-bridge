@@ -1,71 +1,51 @@
-"""`commands.Bot` subclass that owns the shared Chatto client and bridge map."""
+"""Discord bot wiring — delegates to the BridgeEngine."""
 
 from __future__ import annotations
 
-import logging
-
-from chatto_bridge.discord.config import BridgeConfig
-from chattolib import ChattoClient
+from typing import TYPE_CHECKING
 
 import discord
-from chatto_bridge.mapping import BridgeMap
 from discord.ext import commands
 
-log = logging.getLogger(__name__)
+if TYPE_CHECKING:
+    from chattolib import ChattoClient
 
-COGS = (
-    "chatto_bridge.discord.cogs.nats_listener",
-    "chatto_bridge.discord.cogs.chatto_to_discord",
-    "chatto_bridge.discord.cogs.discord_to_chatto",
-    "chatto_bridge.discord.cogs.admin",
-)
+    from chatto_bridge.engine import BridgeEngine
+    from chatto_bridge.mapping import BridgeMap
 
 
 class ChattoBridgeBot(commands.Bot):
-    """Discord bot wiring: Chatto client + room↔channel map + cogs."""
+    """Discord bot that delegates Chatto and bridge map access to the engine."""
 
-    chatto: ChattoClient
-    bridge_map: BridgeMap
-    guild_id: int
-
-    def __init__(self, config: BridgeConfig) -> None:
+    def __init__(self, engine: BridgeEngine, guild_id: int) -> None:
         intents = discord.Intents.default()
         intents.message_content = True
         intents.members = True
         super().__init__(command_prefix="!", intents=intents)
-        self.config = config
-        bridge_map = {
-            (room, "discord"): channel for room, channel in config.room_to_channel.items()
-        }
-        self.bridge_map = BridgeMap(bridge_map, path="chatto-bridge.db")
-        self.guild_id = config.discord_guild_id
+        self._engine = engine
+        self.guild_id = guild_id
 
-    async def setup_hook(self) -> None:
-        # Log into Chatto once; the client is shared across cogs.
-        self.chatto = await ChattoClient.login(
-            self.config.chatto_login,
-            self.config.chatto_password,
-            base_url=self.config.chatto_base_url,
-        )
-        log.info("logged into chatto at %s", self.config.chatto_base_url)
+    @property
+    def engine(self) -> BridgeEngine:
+        return self._engine
 
-        for cog in COGS:
-            await self.load_extension(cog)
-            log.info("loaded cog: %s", cog)
-
-        guild = discord.Object(id=self.guild_id)
-        self.tree.copy_global_to(guild=guild)
-        await self.tree.sync(guild=guild)
-        log.info("synced application commands to guild %s", self.guild_id)
+    @property
+    def chatto(self) -> ChattoClient:
+        return self.engine.chatto
 
     @property
     def chatto_ready(self) -> bool:
-        return hasattr(self, "chatto")
+        return self.engine.chatto_ready
 
-    async def close(self) -> None:
-        self.bridge_map.close()
-        try:
-            await self.chatto.close()
-        except Exception:  # noqa: BLE001 — cleanup path, keep going
-            log.exception("error closing chatto client")
-        await super().close()
+    @property
+    def bridge_map(self) -> BridgeMap:
+        return self.engine.bridge_map
+
+    @property
+    def config(self):
+        return self.engine.config
+
+    async def setup_hook(self) -> None:
+        guild = discord.Object(id=self.guild_id)
+        self.tree.copy_global_to(guild=guild)
+        await self.tree.sync(guild=guild)

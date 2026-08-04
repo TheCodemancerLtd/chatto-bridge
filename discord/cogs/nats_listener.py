@@ -16,13 +16,13 @@ from __future__ import annotations
 import logging
 
 import nats
-from discord.ext import commands
+from chatto_bridge.discord.bot import ChattoBridgeBot
 from nats.aio.client import Client as NATSClient
 from nats.aio.msg import Msg
 from nats.aio.subscription import Subscription
 
-from chatto_bridge.discord.bot import ChattoBridgeBot
 from chatto_bridge.events import decode_event
+from discord.ext import commands
 
 log = logging.getLogger(__name__)
 
@@ -36,9 +36,9 @@ class NatsListener(commands.Cog):
         self.subscription: Subscription | None = None
 
     async def cog_load(self) -> None:
-        opts: dict[str, object] = {"servers": [self.bot.config.nats_url]}
-        if self.bot.config.nats_auth_token:
-            opts["token"] = self.bot.config.nats_auth_token
+        opts: dict[str, object] = {"servers": [self.bot.engine.config.nats_url]}
+        if self.bot.engine.config.nats_auth_token:
+            opts["token"] = self.bot.engine.config.nats_auth_token
         self.nc = await nats.connect(**opts)  # type: ignore[arg-type]
         self.subscription = await self.nc.subscribe(
             ROOM_EVENTS_SUBJECT,
