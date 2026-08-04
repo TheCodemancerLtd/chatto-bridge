@@ -13,3 +13,4 @@ chatto-bridge.env
 chatto-bridge.db
 *.sqlite
 *.sqlite-journal
+.worktrees/
