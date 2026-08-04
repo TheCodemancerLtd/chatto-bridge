@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import tempfile
+
 from chatto_bridge.discord.mapping import BridgeMap, Persistence
 
 
@@ -51,34 +53,55 @@ def _make_map(room_to_channel: dict[str, int], *, persist: bool = True) -> Bridg
 
 
 def test_persist_link() -> None:
-    m = _make_map({})
-    m.link("room-x", 42)
-    assert m.channel_for_room("room-x") == 42
-    m.close()
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=True) as tmp:
+        path = tmp.name
+        m = BridgeMap({}, path=path)
+        m.link("room-x", 42)
+        m.close()
+        # Verify persistence by loading from the same file in a new instance
+        m2 = BridgeMap({}, path=path)
+        assert m2.channel_for_room("room-x") == 42
+        m2.close()
 
 
 def test_persist_unlink() -> None:
-    m = _make_map({"room-x": 42}, persist=True)
-    m.unlink_channel(42)
-    assert m.channel_for_room("room-x") is None
-    m.close()
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=True) as tmp:
+        path = tmp.name
+        m = BridgeMap({"room-x": 42}, path=path)
+        m.unlink_channel(42)
+        m.close()
+        # Verify deletion persisted by loading in a new instance
+        m2 = BridgeMap({}, path=path)
+        assert m2.channel_for_room("room-x") is None
+        m2.close()
 
 
 def test_load_from_persist_on_startup() -> None:
-    p = Persistence(":memory:")
-    p.upsert_bridge("room-a", 10)
-    p.upsert_bridge("room-b", 20)
-    # We can't share an in-memory db across connections in sqlite3,
-    # so we test the load path by verifying the constructor works
-    m = BridgeMap({})
-    _ = m
-    m.close()
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=True) as tmp:
+        path = tmp.name
+        # Write data using Persistence
+        p = Persistence(path)
+        p.upsert_bridge("room-a", 10)
+        p.upsert_bridge("room-b", 20)
+        p.close()
+        # Load from the same file using BridgeMap
+        m = BridgeMap({}, path=path)
+        assert m.channel_for_room("room-a") == 10
+        assert m.channel_for_room("room-b") == 20
+        m.close()
 
 
 def test_env_var_overrides_persisted() -> None:
-    m = BridgeMap({"room-a": 99})
-    assert m.channel_for_room("room-a") == 99
-    m.close()
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=True) as tmp:
+        path = tmp.name
+        # Write data using Persistence
+        p = Persistence(path)
+        p.upsert_bridge("room-a", 1)
+        p.close()
+        # Create BridgeMap with env var value that should override persisted value
+        m = BridgeMap({"room-a": 99}, path=path)
+        assert m.channel_for_room("room-a") == 99
+        m.close()
 
 
 def test_no_persist_when_path_none() -> None:
