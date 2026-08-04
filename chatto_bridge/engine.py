@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import importlib
+import importlib.metadata
 import logging
 from typing import TYPE_CHECKING
 
@@ -92,7 +93,16 @@ class BridgeEngine:
     def _load_plugin(self, name: str) -> BridgePlugin | None:
         """Load a plugin by name using entry points or direct import."""
         try:
-            entry_point = importlib.metadata.entry_points(group="chatto_bridge.plugins").get(name)
+            entry_point = None
+            if hasattr(importlib.metadata.entry_points, "select"):
+                eps = importlib.metadata.entry_points().select(group="chatto_bridge.plugins")
+                entry_point = eps.get(name)
+            else:
+                eps_list = importlib.metadata.entry_points().get("chatto_bridge.plugins", [])
+                for ep in eps_list:
+                    if ep.name == name:
+                        entry_point = ep
+                        break
             if entry_point is not None:
                 factory = entry_point.load()
                 return factory()
@@ -155,41 +165,11 @@ class BridgeEngine:
                 log.exception("failed to send outbound to %s channel %s", platform, channel_id)
 
     async def run(self) -> None:
-        """Start the engine and block on the first plugin's bot run loop.
-
-        This is the main entry point for the application. It starts the engine,
-        then blocks on the Discord bot's run loop (or whichever plugin provides
-        a blocking run method).
-        """
+        """Start the engine and block on the first plugin's run loop."""
         await self.start()
 
-        # Find the discord plugin and run its bot
-        discord_plugin = self._plugins.get("discord")
-        if discord_plugin is None:
-            log.error("no discord plugin loaded")
-            await self.stop()
-            return
-
-        # Access the bot through a public property on the plugin
-        bot = getattr(discord_plugin, "bot", None)
-        if bot is None:
-            log.error("discord plugin has no bot")
-            await self.stop()
-            return
-
-        # Get the token from the plugin's config through public API
-        plugin_config = getattr(discord_plugin, "config", None)
-        if plugin_config is None:
-            log.error("discord plugin has no config")
-            await self.stop()
-            return
-
-        token = getattr(plugin_config, "bot_token", None)
-        if token is None:
-            log.error("discord plugin config has no bot_token")
-            await self.stop()
-            return
-
-        await bot.start(token)
-
-        await self.stop()
+        for plugin in self._plugins.values():
+            if hasattr(plugin, "run"):
+                await plugin.run(self)
+                return
+        log.warning("no plugin provides a run() method")
