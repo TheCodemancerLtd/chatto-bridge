@@ -26,7 +26,7 @@ classifiers = [
 ]
 dependencies = [
     "discord.py>=2.4",
-    "chattolib>=0.4.10",
+    "chattolib>=0.4.19.post1",
     "nats-py>=2.9",
     "protobuf>=5.28",
     "python-dotenv>=1.0",

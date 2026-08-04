@@ -60,7 +60,14 @@ def decode_event(subject: str, data: bytes) -> RoomEvent | None:
     room_id, event_type = parsed
 
     try:
-        from chatto_bridge._pb.chatto.core.v1 import event_pb2  # type: ignore[import-not-found]
+        import sys
+        from importlib import import_module
+        from pathlib import Path
+
+        _pb_dir = Path(__file__).parent / "_pb"
+        if _pb_dir.is_dir() and str(_pb_dir) not in sys.path:
+            sys.path.insert(0, str(_pb_dir))
+        event_pb2 = import_module("chatto.core.v1.event_pb2")
     except ModuleNotFoundError as exc:
         raise RuntimeError(
             "chatto.core.v1 protobuf bindings are missing. Run "
