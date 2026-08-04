@@ -45,9 +45,14 @@ mentions, link previews, and asset binding.
 
 ## Install
 
+Requires `protoc` (Protocol Buffers compiler) and `jq` on PATH.
+
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
+
+# Generate protobuf bindings for NATS event decoding:
+bash scripts/generate_pb.sh
 ```
 
 ## Configure
@@ -78,6 +83,15 @@ chatto-bridge
 # or
 python -m chatto_bridge.discord
 ```
+
+Runtime bridge map changes (`/bridge link`) are persisted to
+`chatto-bridge.db` in the working directory and survive restart.
+The `BRIDGE_MAP` env var always takes precedence over the persisted file.
+
+The `/bridge link` command now supports interactive room discovery:
+- `/bridge link` — browse and select a Chatto room
+- `/bridge link <search>` — filter rooms by name
+- `/bridge link <ulid>` or `/bridge link <url>` — direct link
 
 ## Chatto NATS subjects consumed
 

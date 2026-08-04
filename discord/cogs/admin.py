@@ -1,4 +1,4 @@
-"""`/bridge …` slash commands: link, unlink, and list room↔channel pairs."""
+"""`/bridge …` slash commands with interactive room discovery."""
 
 from __future__ import annotations
 
