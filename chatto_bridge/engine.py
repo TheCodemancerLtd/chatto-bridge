@@ -34,6 +34,7 @@ class BridgeEngine:
         self._chatto: ChattoClient | None = None
         self._chatto_ready = False
         self._bridge_map = BridgeMap(config.bridge_map, path="chatto-bridge.db")
+        self._pending_tasks: set[asyncio.Task] = set()
 
     @property
     def chatto(self) -> ChattoClient:
@@ -137,7 +138,9 @@ class BridgeEngine:
             return
 
         body = f"**{author}**: {content}"
-        asyncio.create_task(self._post_to_chatto(room_id, body))
+        task = asyncio.create_task(self._post_to_chatto(room_id, body))
+        self._pending_tasks.add(task)
+        task.add_done_callback(self._pending_tasks.discard)
 
     async def _post_to_chatto(self, room_id: str, body: str) -> None:
         """Post a message to Chatto."""
@@ -165,11 +168,8 @@ class BridgeEngine:
                 log.exception("failed to send outbound to %s channel %s", platform, channel_id)
 
     async def run(self) -> None:
-        """Start the engine and block on the first plugin's run loop."""
+        """Start the engine and run all plugins that provide a run loop."""
         await self.start()
 
         for plugin in self._plugins.values():
-            if hasattr(plugin, "run"):
-                await plugin.run(self)
-                return
-        log.warning("no plugin provides a run() method")
+            await plugin.run(self)
