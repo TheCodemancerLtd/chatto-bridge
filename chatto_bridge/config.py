@@ -18,7 +18,7 @@ class ConfigError(RuntimeError):
 
 def _required(name: str) -> str:
     value = os.environ.get(name)
-    if not value:
+    if value is None:
         raise ConfigError(f"missing required env var: {name}")
     return value
 

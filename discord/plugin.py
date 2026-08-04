@@ -66,6 +66,11 @@ class DiscordPlugin(BridgePlugin):
             cid = channel_id
         await self._bot.dispatch("bridge_outbound", room_id, cid, content, author)
 
+    async def run(self, engine: BridgeEngine) -> None:
+        if self._bot is None:
+            return
+        await self._bot.start(self.config.bot_token)
+
     async def on_inbound_message(
         self,
         channel_id: str | int,

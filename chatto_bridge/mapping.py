@@ -124,11 +124,7 @@ class Persistence:
 
 
 def _is_int(value: str) -> bool:
-    try:
-        int(value)
-        return True
-    except (ValueError, TypeError):
-        return False
+    return value.isdigit()
 
 
 class BridgeMap:
