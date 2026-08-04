@@ -16,11 +16,11 @@ from __future__ import annotations
 
 import logging
 
-import discord
-from discord.ext import commands
-
 from chatto_bridge.discord.bot import ChattoBridgeBot
+
+import discord
 from chatto_bridge.events import RoomEvent
+from discord.ext import commands
 
 log = logging.getLogger(__name__)
 
@@ -36,16 +36,19 @@ class ChattoToDiscord(commands.Cog):
 
     @commands.Cog.listener()
     async def on_chatto_room_event(self, event: RoomEvent) -> None:
-        channel_id = self.bot.bridge_map.channel_for_room(event.room_id)
+        entries = self.bot.bridge_map.channels_for_room(event.room_id)
+        channel_id: int | None = None
+        for platform, cid in entries:
+            if platform == "discord" and isinstance(cid, int):
+                channel_id = cid
+                break
         if channel_id is None:
             return
 
         if event.event_type == "message_posted":
             await self._forward_message_posted(channel_id, event)
         else:
-            log.debug(
-                "unhandled event_type=%s room=%s", event.event_type, event.room_id
-            )
+            log.debug("unhandled event_type=%s room=%s", event.event_type, event.room_id)
 
     async def _forward_message_posted(self, channel_id: int, event: RoomEvent) -> None:
         payload = event.payload

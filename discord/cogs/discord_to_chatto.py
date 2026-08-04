@@ -10,10 +10,10 @@ from __future__ import annotations
 
 import logging
 
+from chatto_bridge.discord.bot import ChattoBridgeBot
+
 import discord
 from discord.ext import commands
-
-from chatto_bridge.discord.bot import ChattoBridgeBot
 
 log = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class DiscordToChatto(commands.Cog):
         if message.guild is None or message.guild.id != self.bot.guild_id:
             return
 
-        room_id = self.bot.bridge_map.room_for_channel(message.channel.id)
+        room_id = self.bot.bridge_map.room_for_channel("discord", message.channel.id)
         if room_id is None:
             return
         if not message.content:

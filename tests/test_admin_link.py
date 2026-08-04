@@ -69,7 +69,7 @@ def _link_logic(
             or _ULID_RE.match(resolved)
         )
         if is_direct:
-            bot.bridge_map.link(resolved, channel_id)
+            bot.bridge_map.link(resolved, "discord", channel_id)
             return "direct"
         else:
             # Fuzzy search - trigger discovery with search term
@@ -90,7 +90,7 @@ async def test_link_with_plain_ulid() -> None:
     # Valid 26-char ULID is treated as direct link
     result = _link_logic(bot, interaction, "01ARZ3N9K7DEFGHJKMNPRSTVWX")
     assert result == "direct"
-    bot.bridge_map.link.assert_called_once_with("01ARZ3N9K7DEFGHJKMNPRSTVWX", 999)
+    bot.bridge_map.link.assert_called_once_with("01ARZ3N9K7DEFGHJKMNPRSTVWX", "discord", 999)
 
 
 @pytest.mark.asyncio
@@ -108,7 +108,7 @@ async def test_link_with_url() -> None:
     interaction = _make_interaction()
     result = _link_logic(bot, interaction, "https://chat.chatto.run/room/r3m5t7x9k2")
     assert result == "direct"
-    bot.bridge_map.link.assert_called_once_with("r3m5t7x9k2", 999)
+    bot.bridge_map.link.assert_called_once_with("r3m5t7x9k2", "discord", 999)
 
 
 @pytest.mark.asyncio

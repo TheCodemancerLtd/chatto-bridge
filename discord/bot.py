@@ -5,10 +5,10 @@ from __future__ import annotations
 import logging
 
 from chatto_bridge.discord.config import BridgeConfig
-from chatto_bridge.discord.mapping import BridgeMap
 from chattolib import ChattoClient
 
 import discord
+from chatto_bridge.mapping import BridgeMap
 from discord.ext import commands
 
 log = logging.getLogger(__name__)
@@ -34,7 +34,10 @@ class ChattoBridgeBot(commands.Bot):
         intents.members = True
         super().__init__(command_prefix="!", intents=intents)
         self.config = config
-        self.bridge_map = BridgeMap(config.room_to_channel, path="chatto-bridge.db")
+        bridge_map = {
+            (room, "discord"): channel for room, channel in config.room_to_channel.items()
+        }
+        self.bridge_map = BridgeMap(bridge_map, path="chatto-bridge.db")
         self.guild_id = config.discord_guild_id
 
     async def setup_hook(self) -> None:

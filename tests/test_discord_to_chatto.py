@@ -64,7 +64,7 @@ def _forward_logic(
     if message.guild is None or message.guild.id != bot.guild_id:
         return
 
-    room_id = bot.bridge_map.room_for_channel(message.channel.id)
+    room_id = bot.bridge_map.room_for_channel("discord", message.channel.id)
     if room_id is None:
         return
     if not message.content:

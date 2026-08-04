@@ -54,7 +54,7 @@ class Admin(commands.Cog):
                 or _ULID_RE.match(resolved)
             )
             if is_direct:
-                self.bot.bridge_map.link(resolved, channel_id)
+                self.bot.bridge_map.link(resolved, "discord", channel_id)
                 await interaction.response.send_message(
                     f"Linked chatto room `{resolved}` ↔ <#{channel_id}>",
                     ephemeral=True,
@@ -158,7 +158,7 @@ class Admin(commands.Cog):
                 continue
 
             chosen = candidates[idx]
-            self.bot.bridge_map.link(chosen.room.id, channel_id)
+            self.bot.bridge_map.link(chosen.room.id, "discord", channel_id)
             await interaction.followup.send(
                 f"Linked `{chosen.room.name}` (`{chosen.room.id}`) ↔ <#{channel_id}>",
                 ephemeral=True,
@@ -172,7 +172,7 @@ class Admin(commands.Cog):
         description="Unlink this channel from any Chatto room.",
     )
     async def unlink(self, interaction: discord.Interaction) -> None:
-        removed = self.bot.bridge_map.unlink_channel(interaction.channel_id or 0)
+        removed = self.bot.bridge_map.unlink("discord", interaction.channel_id or 0)
         if removed:
             await interaction.response.send_message(
                 f"Unlinked <#{interaction.channel_id}>",
@@ -190,7 +190,7 @@ class Admin(commands.Cog):
         if not entries:
             await interaction.response.send_message("No bridge links configured.", ephemeral=True)
             return
-        lines = [f"- `{room}` ↔ <#{channel}>" for room, channel in entries]
+        lines = [f"- `{room}` ↔ <#{channel}>" for room, _platform, channel in entries]
         await interaction.response.send_message("\n".join(lines), ephemeral=True)
 
 
