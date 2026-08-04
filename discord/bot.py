@@ -55,6 +55,10 @@ class ChattoBridgeBot(commands.Bot):
         await self.tree.sync(guild=guild)
         log.info("synced application commands to guild %s", self.guild_id)
 
+    @property
+    def chatto_ready(self) -> bool:
+        return hasattr(self, "chatto")
+
     async def close(self) -> None:
         self.bridge_map.close()
         try:
