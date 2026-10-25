@@ -19,8 +19,8 @@ live.evt.room.>
 ```
 
 Subject shape: `[live.]evt.room.{room_id}.{event_type}` — snake_case tokens.
-Payload: protobuf-serialised `chatto.core.v1.Event` (source of truth:
-`proto/chatto/core/v1/event.proto` in the Chatto repo).
+Payload: protobuf-serialised `chatto.core.evt.v1.Event` (source of truth:
+`proto/chatto/core/evt/v1/event.proto` in the Chatto repo).
 
 ## Event types the bridge cares about
 
@@ -45,7 +45,7 @@ the intended way to bridge more.
 
 ## Not used (yet)
 
-- `live.sync.>` — transient `chatto.core.v1.LiveEvent` payloads: typing
+- `live.sync.>` — transient `chatto.core.evt.v1.LiveEvent` payloads: typing
   indicators, presence, voice-call presence, notification sync, config
   invalidations. Cheap to add if the bridge needs presence propagation.
 - Direct `evt.>` (JetStream) subscription — only needed for

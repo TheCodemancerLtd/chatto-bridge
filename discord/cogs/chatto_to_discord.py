@@ -33,6 +33,8 @@ class ChattoToDiscord(commands.Cog):
         # Cache one webhook per Discord channel so we don't hit the API on
         # every forwarded message.
         self._webhooks: dict[int, discord.Webhook] = {}
+        # Cache Chatto user_id -> display name lookups.
+        self._authors: dict[str, str] = {}
 
     @commands.Cog.listener()
     async def on_chatto_room_event(self, event: RoomEvent) -> None:
@@ -51,18 +53,26 @@ class ChattoToDiscord(commands.Cog):
             log.debug("unhandled event_type=%s room=%s", event.event_type, event.room_id)
 
     async def _forward_message_posted(self, channel_id: int, event: RoomEvent) -> None:
-        payload = event.payload
-        # `MessagePostedEvent` field names come straight from
-        # chatto.core.v1.event.proto. We keep the access defensive so a
-        # server-side proto addition doesn't crash the bridge.
-        body = getattr(payload, "body", None) or getattr(payload, "text", "")
-        author_display = (
-            getattr(payload, "author_display_name", None)
-            or getattr(payload, "author_id", None)
-            or "chatto"
-        )
-        if not body:
+        # Since Chatto 0.5.0 (event-sourcing cutover, ADR-034) the NATS
+        # `message_posted` payload is a thin hint: the message body lives in a
+        # separate encrypted `MessageBodyEvent` and is NOT on the wire here.
+        # Hydrate the full message (body included, decrypted server-side for
+        # us) through the ConnectRPC API — same strategy chattolib's Bot uses.
+        envelope_id = getattr(event.raw, "id", "") or ""
+        if not envelope_id:
             return
+        try:
+            msg = await self.bot.chatto.get_message(event.room_id, envelope_id)
+        except Exception:
+            log.exception("failed to hydrate message %s in room %s", envelope_id, event.room_id)
+            return
+        if msg is None or not msg.body:
+            return
+
+        body = msg.body
+        author_display = await self._author_display(msg.actor_id)
+        if not author_display:
+            author_display = "chatto"
 
         webhook = await self._get_webhook(channel_id)
         if webhook is None:
@@ -73,6 +83,30 @@ class ChattoToDiscord(commands.Cog):
             await webhook.send(content=body, username=str(author_display))
         except discord.HTTPException:
             log.exception("failed to forward chatto message to discord")
+
+    async def _author_display(self, user_id: str) -> str | None:
+        """Resolve an author's display name via the Chatto directory API.
+
+        The NATS event payloads never carried display names reliably after
+        the 0.5.0 cutover, so we look the author up (cached per user).
+        """
+        if not user_id:
+            return None
+        cached = self._authors.get(user_id)
+        if cached is not None:
+            return cached
+        try:
+            members = await self.bot.chatto.batch_get_users([user_id])
+        except Exception:
+            log.warning("failed to resolve chatto user %s", user_id)
+            return None
+        for member in members:
+            if member.user is not None and member.user.id == user_id:
+                name = member.user.display_name or member.user.login or None
+                if name:
+                    self._authors[user_id] = name
+                return name
+        return None
 
     async def _get_webhook(self, channel_id: int) -> discord.Webhook | None:
         cached = self._webhooks.get(channel_id)

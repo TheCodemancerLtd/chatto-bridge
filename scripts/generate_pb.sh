@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 # Fetch Chatto's core-event proto sources and generate Python bindings.
 #
-# Chatto publishes `chatto.core.v1.Event` messages onto the NATS `evt.>`
+# Chatto publishes `chatto.core.evt.v1.Event` messages onto the NATS `evt.>`
 # (durable) and `live.evt.>` (republish) subjects. The bridge needs the
-# core/v1 tree to decode room events; the api/v1 / realtime/v1 trees are
+# core/evt/v1 tree to decode room events; the api/v1 / realtime/v1 trees are
 # already available in `chattolib._pb`.
+#
+# NOTE: the envelope moved from `chatto.core.v1` to `chatto.core.evt.v1`
+# during Chatto's 0.5.0 event-sourcing cutover (ADR-034). The old
+# `proto/chatto/core/v1` path no longer exists upstream.
 #
 # Requires `protoc`, `curl`, and `jq` on PATH. Idempotent — safe to re-run.
 
@@ -13,12 +17,14 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROTO_DIR="${REPO_ROOT}/proto"
 OUT_DIR="${REPO_ROOT}/chatto_bridge/_pb"
-CHATTO_REF="${CHATTO_REF:-main}"
+# Pin to a released Chatto tag by default; `main` can break the wire contract
+# mid-flight. Override with CHATTO_REF=<tag> when tracking a new release.
+CHATTO_REF="${CHATTO_REF:-v0.5.0-beta.20}"
 BASE_URL="https://raw.githubusercontent.com/chattocorp/chatto/${CHATTO_REF}"
 
-# Fetch the directory listing from GitHub to get all .proto files in core/v1.
+# Fetch the directory listing from GitHub to get all .proto files in core/evt/v1.
 # This avoids maintaining a fragile manual file list.
-CORE_V1_PATH="proto/chatto/core/v1"
+CORE_V1_PATH="proto/chatto/core/evt/v1"
 echo "Fetching .proto files from chattocorp/chatto@${CHATTO_REF}:${CORE_V1_PATH}"
 
 FILES_JSON=$(curl -fsSL "https://api.github.com/repos/chattocorp/chatto/contents/${CORE_V1_PATH}?ref=${CHATTO_REF}")

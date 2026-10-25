@@ -32,8 +32,7 @@ class CoreConfig:
     """Platform-agnostic bridge configuration."""
 
     chatto_base_url: str
-    chatto_login: str
-    chatto_password: str
+    chatto_bot_key: str
 
     nats_url: str
     nats_auth_token: str | None
@@ -81,8 +80,7 @@ class CoreConfig:
 
         return cls(
             chatto_base_url=_required("CHATTO_BASE_URL"),
-            chatto_login=_required("CHATTO_LOGIN"),
-            chatto_password=_required("CHATTO_PASSWORD"),
+            chatto_bot_key=_required("CHATTO_BOT_KEY"),
             nats_url=_required("NATS_URL"),
             nats_auth_token=_optional("NATS_AUTH_TOKEN") or None,
             bridge_map=bridge_map,

@@ -56,9 +56,10 @@ class BridgeEngine:
 
     async def start(self) -> None:
         """Initialize Chatto client and start all plugins."""
-        self._chatto = await ChattoClient.login(
-            self.config.chatto_login,
-            self.config.chatto_password,
+        # chattolib >= 0.5.0b5 is bot-only: the bot key is used directly as
+        # a bearer token (no username/password login round-trip).
+        self._chatto = ChattoClient(
+            token=self.config.chatto_bot_key,
             base_url=self.config.chatto_base_url,
         )
         self._chatto_ready = True

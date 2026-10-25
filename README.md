@@ -70,8 +70,7 @@ Required env vars:
 | `DISCORD_BOT_TOKEN` | Bot token from the Discord developer portal |
 | `DISCORD_GUILD_ID` | The guild (server) this bridge attaches to |
 | `CHATTO_BASE_URL` | e.g. `https://chat.chatto.run` |
-| `CHATTO_LOGIN` | Login for the Chatto bot account |
-| `CHATTO_PASSWORD` | Password for the Chatto bot account |
+| `CHATTO_BOT_KEY` | Bot key (`cht_BK_...`) for the Chatto bot account, used directly as a bearer token |
 | `NATS_URL` | e.g. `nats://localhost:4222` (Chatto's `CHATTO_NATS_CLIENT_URL`) |
 | `NATS_AUTH_TOKEN` | optional; matches `CHATTO_NATS_EMBEDDED_AUTH_TOKEN` |
 | `BRIDGE_MAP` | JSON: `{"<chatto_room_id>": <discord_channel_id>, ...}` |
@@ -98,7 +97,7 @@ The `/bridge link` command now supports interactive room discovery:
 The bridge subscribes to Chatto's **plain NATS republish subject**
 `live.evt.room.>` (mirror of the JetStream `EVT` stream), so no durable
 JetStream consumer state has to be maintained. Payloads are the same
-`chatto.core.v1.Event` protobuf envelope Chatto uses internally.
+`chatto.core.evt.v1.Event` protobuf envelope Chatto uses internally.
 
 See [`docs/nats.md`](docs/nats.md) for the current list of relevant
 event tokens (`message_posted`, `message_edited`, `reaction_added`, …).
@@ -115,7 +114,7 @@ see `[tool.setuptools.package-dir]` in `pyproject.toml`.
 /
 ├── chatto_bridge/            # shared, imported as `chatto_bridge`
 │   ├── events.py             # RoomEvent, subject parser, protobuf decoder
-│   └── _pb/                  # generated chatto.core.v1 bindings (gitignored)
+│   └── _pb/                  # generated chatto.core.evt.v1 bindings (gitignored)
 ├── discord/                  # imported as `chatto_bridge.discord`
 │   ├── __main__.py           # entrypoint (also the `chatto-bridge` script)
 │   ├── bot.py                # commands.Bot subclass; loads cogs
@@ -127,7 +126,7 @@ see `[tool.setuptools.package-dir]` in `pyproject.toml`.
 │       ├── discord_to_chatto.py   # forward discord messages via chattolib
 │       └── admin.py               # /bridge link|unlink|list slash commands
 ├── slack/                    # imported as `chatto_bridge.slack` (placeholder)
-├── proto/                    # vendored chatto.core.v1 protos (gitignored)
+├── proto/                    # vendored chatto.core.evt.v1 protos (gitignored)
 ├── scripts/generate_pb.sh    # fetches protos + runs protoc
 ├── docs/nats.md              # subjects consumed + write-path rationale
 ├── tests/

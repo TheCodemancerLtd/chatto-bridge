@@ -2,7 +2,7 @@
 
 Anything in this package is platform-agnostic and speaks only to Chatto:
 NATS subject parsing, the protobuf-decoded `RoomEvent` shape, and (later)
-the generated `chatto.core.v1` bindings under `_pb/`.
+the generated `chatto.core.evt.v1` bindings under `_pb/`.
 
 Platform integrations live in sibling top-level directories that setuptools
 remaps into subpackages of this one:
