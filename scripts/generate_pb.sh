@@ -19,7 +19,7 @@ PROTO_DIR="${REPO_ROOT}/proto"
 OUT_DIR="${REPO_ROOT}/chatto_bridge/_pb"
 # Pin to a released Chatto tag by default; `main` can break the wire contract
 # mid-flight. Override with CHATTO_REF=<tag> when tracking a new release.
-CHATTO_REF="${CHATTO_REF:-v0.5.0-beta.28}"
+CHATTO_REF="${CHATTO_REF:-v0.5.0-rc.2}"
 BASE_URL="https://raw.githubusercontent.com/chattocorp/chatto/${CHATTO_REF}"
 
 # Fetch the directory listing from GitHub to get all .proto files in core/evt/v1.
